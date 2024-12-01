@@ -12,6 +12,26 @@ function WordFall() {
     // State to track whether the game has started
     const [gameStarted, setGameStarted] = useState(false);
 
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            console.log("Key pressed:", event.key); // Logs the key
+            handleKeyboard(event.key);
+        };
+
+        // Attach event listener
+        window.addEventListener("keydown", handleKeyDown);
+
+        // Cleanup event listener on unmount
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    function handleKeyboard(key){
+
+
+    }
+
 
     const handleStart = () => {
         console.log("handleStart");
@@ -51,7 +71,7 @@ function WordFall() {
 
 
         const interval = setInterval(() => {
-            if (countVisible(words) < 5 && inputText!=="" ) {
+            if (countVisible(words) < 5 && inputText !== "") {
                 addVisible();
             } else {
                 setInputText("")
@@ -94,7 +114,7 @@ function WordFall() {
 
     useEffect(() => {
         console.log('inputText updated:', inputText);
-        if(inputText!==""){
+        if (inputText !== "") {
             handleStart()
         }
     }, [inputText]);
@@ -132,11 +152,11 @@ function WordFall() {
             )}
 
             {/* Image at the bottom */}
-            <img
-                src="typeithero1.png"
-                alt="TYPE IT HERO"
-                style={styles.bottomImage}
-            />
+            <div style={styles.bottomBanner}>
+                <div style={styles.word}>Type it hero!</div>
+
+
+            </div>
         </div>
     );
 }
@@ -151,7 +171,6 @@ const styles = {
     },
     gameOverText: {
         textAlign: "center",
-        marginTop: "50%",
     },
     wordList: {
         display: "flex",
@@ -160,8 +179,8 @@ const styles = {
     },
     word: {
         height: "15vh", //         width: "50%",
-
-        width: "50%",
+        fontSize: "7vh",
+        width: "70%",
         background: "black",
         color: "white",
         display: "flex",
@@ -169,11 +188,16 @@ const styles = {
         justifyContent: "center",
         margin: "5px",
     },
-    bottomImage: {
+    bottomBanner: {
         position: "absolute", // Ensures the image stays at the bottom
         bottom: 0,
-        width: "50%",
+        height: "15vh",
+        width: "100%",
         left: "50%",
+        alignItems: "center",
+        justifyContent: "center",
+        display: "flex",
+        alignItems: "center",
         transform: "translateX(-50%)", // Centers the image horizontally
     },
     inputContainer: {
@@ -204,7 +228,7 @@ const styles = {
         padding: "10px 20px",
         fontSize: "16px",
         fontWeight: "bold",
-        backgroundColor: "#111111", // Blue color
+        backgroundColor: "red", // Blue color
         color: "white",
         border: "none",
         borderRadius: "5px",
@@ -213,7 +237,7 @@ const styles = {
         transition: "background-color 0.3s ease",
     },
     pastedText: {
-        fontSize: "10px",
+        fontSize: "8px",
         color: "white",
         textAlign: "center",
         maxWidth: "80%", // Limits width to avoid text overflow
