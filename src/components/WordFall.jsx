@@ -43,7 +43,6 @@ function WordFall() {
                     setText("You won! Paste some text to restart.");
                     return { cl: 0, kl: 0, ip: false };
                 } else {
-                    
                     return { ...prevState, kl: prevState.kl + 1, ip: true }   
                 }
             });
