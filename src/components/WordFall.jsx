@@ -1,254 +1,187 @@
-import { isVisible } from "@testing-library/user-event/dist/utils";
-import React, { useState, useEffect } from "react";
+import { color } from "motion/react";
+import React, { useEffect } from "react";
+
 
 function WordFall() {
 
-    // State to store the list of words
-    const [words, setWords] = useState([]);
+    const [text, setText] = React.useState("");
+    const [words, setWords] = React.useState([]);
+    const [gameStatus, setGameStatus] = React.useState({
+        cl: 0,
+        kl: 0,
+        ip: false
+    })
 
-    // State for the input text field
-    const [inputText, setInputText] = useState("");
+    const handlePaste = async () => {
+        const clipboardText = await navigator.clipboard.readText();
+        console.log("Text Pasted...")
+        console.log(clipboardText)
 
-    // State to track whether the game has started
-    const [gameStarted, setGameStarted] = useState(false);
+        const cleanText = clipboardText.trim().substring(0, 300);
 
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            console.log("Key pressed:", event.key); // Logs the key
-            handleKeyboard(event.key);
-        };
-
-        // Attach event listener
-        window.addEventListener("keydown", handleKeyDown);
-
-        // Cleanup event listener on unmount
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, []);
-
-    function handleKeyboard(key){
-
-
+        if (cleanText.split(/\s+/).length > 5) {
+            setText(cleanText)
+        } else {
+            console.log("Text was invalid")
+            setText("Please paste 5+ words to play")
+        }
     }
 
+    useEffect(() => {
 
-    const handleStart = () => {
-        console.log("handleStart");
-        console.log(inputText);
-        // Convert the input text into an array of word objects
-        const wordArray = inputText.split(" ").map((word) => ({
-            word: word, // The word itself
+        //set up the words state
+
+        const wordArray = text.split(" ").map((word) => ({
+            word: word,
             letterlist: word.split("").map((letter) => ({
-                letter: letter, // Each letter
-                isTyped: false, // Whether the letter has been typed
+                letter: letter,
+                isTyped: false,
             })),
-            isFocused: false, // Future feature: whether the word is currently focused
-            isVisible: false, // Visibility on the screen
+            isFocused: false,
+            isVisible: false,
         }));
+
+        console.log("Setting Up Words");
         console.log(wordArray);
 
-        setWords(() =>
-            wordArray.map((word, i) => {
-                if (i === countVisible(wordArray)) {
-                    return { ...word, isVisible: true };
-                }
-                return word;
-            })
-        );
-
-    };
-
-
-    function countVisible(words) {
-        return words.filter((w) => w.isVisible).length;
-    }
-
+        if (wordArray.length > 4) {
+            setWords(wordArray);
+        }
+    }, [text])
 
     useEffect(() => {
-        console.log(words.length);
-        console.log(countVisible(words));
+        let interval;
+        if (words.length > 4) {
+            interval = setInterval(() => {
+                setGameStatus(prevState => {
+                    if (prevState.cl < 4) {
+                        return { ...prevState, cl: prevState.cl + 1, ip: true };
+                    } else {
+                        // Game Over
+                        clearInterval(interval);
+                        setText("Game Over! Paste some text to restart.");
 
-
-        const interval = setInterval(() => {
-            if (countVisible(words) < 5 && inputText !== "") {
-                addVisible();
-            } else {
-                setInputText("")
-            }
-        }, 5000); // Trigger every second
-        return () => clearInterval(interval); // Cleanup on unmount
-
-
-
+                        return { cl: 0, kl: 0, ip: false };
+                    }
+                });
+            }, 2000);
+        }
+        return () => clearInterval(interval);
     }, [words]);
 
-    /**
-     * Adds the next word to the visible list.
-     */
-    function addVisible() {
+    useEffect(() => {
+        console.log("GAME STATUS Changed : CL : " + gameStatus.cl)
+        console.log(words);
         setWords((prevWords) =>
             prevWords.map((word, i) => {
-                if (i === countVisible(prevWords)) {
-                    return { ...word, isVisible: true };
+                if ( i < gameStatus.cl) {
+                    if (i === gameStatus.kl) {
+                        return { ...word, isVisible: true, isFocused: true };
+
+                    } else {
+                        return { ...word, isVisible: true, isFocused: false };
+                    }
+                } else {
+                    console.log("All invisible")
+                    return { ...word, isVisible: false, isFocused: false };
                 }
-                return word;
             })
         );
-        console.log("after added visible:");
-        console.log(words);
-
-
-
-    }
-
-    const handleCopy = async () => {
-        try {
-            const clipboardText = await navigator.clipboard.readText();
-            setInputText(clipboardText.slice(0, 50));
-
-        } catch (error) {
-            console.error('Error copying text:', error);
-        }
-    };
-
-    useEffect(() => {
-        console.log('inputText updated:', inputText);
-        if (inputText !== "") {
-            handleStart()
-        }
-    }, [inputText]);
+    }, [gameStatus])
 
     return (
         <div style={styles.container}>
-            {/* Input section */}
-            <div style={styles.wordList}>
-                <div style={styles.word}>
-                    <div style={styles.pasteContainer}>
-                        <button onClick={handleCopy} style={styles.pasteButton}>Paste Text</button>
-                        <p style={styles.pastedText} fontSize="4px" color="white">{inputText}</p>
-                    </div>
-                </div>
+            <div style={styles.header}>
+                <button style={styles.pasteButton}
+                    onClick={handlePaste}>
+                    PASTE YOUR TEXT</button>
+                <p>{text}</p>
             </div>
 
-            {/* Game area */}
-            {countVisible(words) >= 5 ? (
-                // Game Over Screen
-                <div>
-                    <h1 style={styles.gameOverText}>Game Over!</h1>
-                    <p>Paste some text to restart</p>
-                </div>
-            ) : (
-                <div style={styles.wordList}>
-                    {/* Display visible words */}
-                    {words.slice().reverse().map((w, index) =>
-                        w.isVisible && w.word != "" ? (
-                            <div key={index} style={styles.word}>
-                                {w.word}
-                            </div>
-                        ) : null
-                    )}
-                </div>
-            )}
-
-            {/* Image at the bottom */}
-            <div style={styles.bottomBanner}>
-                <div style={styles.word}>Type it hero!</div>
+            <div style={styles.wordList}>
+                {words.slice().reverse().map((w, index) =>
+                    w.isVisible && (
+                        <div
+                            key={index}
+                            style={{
+                                ...styles.box,
+                                border: w.isFocused ? "2px solid red" : "2px solid transparent"
+                            }}
+                        >
+                            <h2>{w.word}</h2>
+                            
+                        </div>
+                    )
+                )}
+            </div>
 
 
+            <div style={styles.footer}>
+                <h1>Type It Hero!</h1>
             </div>
         </div>
-    );
+    )
+
 }
 
-// Styles
 const styles = {
     container: {
-        height: "100vh",
         background: "#121212",
-        color: "white",
+        height: "100vh",
+        width: "100vw",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        color: "white",
+        alignItems: "center"
     },
-    gameOverText: {
-        textAlign: "center",
+    box: {
+        display: "flex",
+        flexDirection: "column",
+        background: "#000000",
+        height: "15vh",
+        width: "75vh",
+        justifyContent: "center",
+        margin: "10px",
+        fontSize: "2vh"
+    },
+    header: {
+        display: "flex",
+        flexDirection: "column",
+        background: "#000000",
+        height: "15vh",
+        width: "75vh",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    footer: {
+        background: "#000000",
+        height: "15vh",
+        width: "75vh",
+        position: "absolute",
+        bottom: 0,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        fontSize: "2vh"
+    },
+    pasteButton: {
+        background: "red",
+        color: "#ffffff",
+        padding: "10px",
+        border: "none",
+        cursor: "pointer",
+        fontSize: "2vh",
+        fontWeight: "bold"
     },
     wordList: {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-    },
-    word: {
-        height: "15vh", //         width: "50%",
-        fontSize: "7vh",
-        width: "70%",
-        background: "black",
-        color: "white",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "5px",
-    },
-    bottomBanner: {
-        position: "absolute", // Ensures the image stays at the bottom
-        bottom: 0,
-        height: "15vh",
-        width: "100%",
-        left: "50%",
-        alignItems: "center",
-        justifyContent: "center",
-        display: "flex",
-        alignItems: "center",
-        transform: "translateX(-50%)", // Centers the image horizontally
-    },
-    inputContainer: {
-        display: "flex",
-        width: "100%",
-        height: "10vh",
-        background: "black",
-    },
-    input: {
-        width: "80%",
-        padding: "10px",
-        fontSize: "16px",
-        border: "none",
-        outline: "none",
-        textAlign: "start",
-    },
-    startButton: {
-        width: "20%",
-        padding: "10px",
-        fontSize: "16px",
-        background: "yellow",
-        color: "black",
-        border: "none",
-        cursor: "pointer",
-        textAlign: "center",
-    },
-    pasteButton: {
-        padding: "10px 20px",
-        fontSize: "16px",
-        fontWeight: "bold",
-        backgroundColor: "red", // Blue color
-        color: "white",
-        border: "none",
-        borderRadius: "5px",
-        cursor: "pointer",
-        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)",
-        transition: "background-color 0.3s ease",
-    },
-    pastedText: {
-        fontSize: "8px",
-        color: "white",
-        textAlign: "center",
-        maxWidth: "80%", // Limits width to avoid text overflow
-    },
-    pasteContainer: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: "20px",
+        fontSize:"2vh"
     }
-};
+}
+
+
 
 export default WordFall;
