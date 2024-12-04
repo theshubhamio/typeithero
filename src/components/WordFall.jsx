@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { getNextKeyDef } from "@testing-library/user-event/dist/keyboard/getNextKeyDef";
 import { isVisible } from "@testing-library/user-event/dist/utils";
 import { color } from "motion/react";
@@ -6,6 +6,8 @@ import { color } from "motion/react";
 function WordFall() {
     const [text, setText] = useState("Paste some text to start the game");
     const [words, setWords] = useState([]);
+    const iRef = useRef(null);
+
     const [gameStatus, setGameStatus] = useState({
         cl: 0,
         kl: 0,
@@ -17,11 +19,11 @@ function WordFall() {
         for (const w of words) {
             if (w.isFocused) {
                 const untypedLetters = w.letterlist.filter(l => !l.isTyped);
-                
+
                 if (untypedLetters.length > 0) {
                     const neededKey = untypedLetters[0];
                     const isLastKey = untypedLetters.length === 1;
-                    
+
                     return {
                         key: neededKey.letter,
                         isLastKey: isLastKey
@@ -29,25 +31,25 @@ function WordFall() {
                 }
             }
         }
-        
+
         return { key: null, isLastKey: false };
     }, [words]);
 
     // Handle keyboard input with updated state management
     const handleKeyboard = useCallback((k, isLastKey) => {
 
-        if(isLastKey){
+        if (isLastKey) {
             //update KL
             setGameStatus(prevState => {
                 if (prevState.cl - prevState.kl == 1 && words.length == prevState.cl) {
                     setText("You won! Paste some text to restart.");
                     return { cl: 0, kl: 0, ip: false };
                 } else {
-                    return { ...prevState, kl: prevState.kl + 1, ip: true }   
+                    return { ...prevState, kl: prevState.kl + 1, ip: true }
                 }
             });
 
-        }else{
+        } else {
 
             setWords(prevWords => {
                 return prevWords.map(word => {
@@ -70,7 +72,7 @@ function WordFall() {
             });
 
         }
-        
+
     }, []);
 
     // Keyboard event listener
@@ -131,7 +133,7 @@ function WordFall() {
         if (words.length > 4) {
             interval = setInterval(() => {
                 setGameStatus(prevState => {
-                    if (prevState.cl-prevState.kl < 4) {
+                    if (prevState.cl - prevState.kl < 4) {
                         return { ...prevState, cl: prevState.cl + 1, ip: true };
                     } else {
                         clearInterval(interval);
@@ -164,9 +166,20 @@ function WordFall() {
         console.log(gameStatus)
     }, [gameStatus]);
 
+    useEffect(() => {
+        if (iRef.current) {
+          iRef.current.focus();
+        }
+      }, []);
+
     // Render
     return (
         <div style={styles.container}>
+            <input
+                ref={iRef}
+                type="text"
+                style={{ opacity: 0, position: 'absolute', zIndex: -1 }}
+            />
             <div style={styles.header}>
                 <button style={styles.pasteButton} onClick={handlePaste}>
                     PASTE YOUR TEXT
@@ -181,7 +194,7 @@ function WordFall() {
                             key={index}
                             style={{
                                 ...styles.box,
-                                border: w.isFocused ? "2px solid red" : "2px solid transparent"
+                                border: w.isFocused ? "2px solid #E74C3C" : "2px solid transparent"
                             }}
                         >
                             <h2>
@@ -189,7 +202,7 @@ function WordFall() {
                                     <span
                                         key={letterIndex}
                                         style={{
-                                            color: letter.isTyped ? 'green' : 'white',
+                                            color: letter.isTyped ? '#34C759' : 'white',
                                             textDecoration: letter.isTyped ? 'underline' : 'none'
                                         }}
                                     >
@@ -211,7 +224,7 @@ function WordFall() {
 
 const styles = {
     container: {
-        background: "#121212",
+        background: "#0B0C10",
         height: "100vh",
         width: "100vw",
         overflow: "hidden",
@@ -223,7 +236,7 @@ const styles = {
     box: {
         display: "flex",
         flexDirection: "column",
-        background: "#000000",
+        background: "#1C1E22",
         height: "15vh",
         width: "75vh",
         justifyContent: "center",
@@ -232,14 +245,15 @@ const styles = {
     header: {
         display: "flex",
         flexDirection: "column",
-        background: "#000000",
+        background: "#1C1E22",
         height: "15vh",
         width: "75vh",
         justifyContent: "center",
         alignItems: "center",
+        border: "2px solid #1C1E22"
     },
     footer: {
-        background: "#000000",
+        background: "#1C1E22",
         height: "15vh",
         width: "75vh",
         position: "absolute",
@@ -247,16 +261,21 @@ const styles = {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        fontSize: "2vh"
+        fontSize: "2vh",
+        color: "#D6D8DA",
+        border: "2px solid #1C1E22"
+
+
     },
     pasteButton: {
-        background: "#121212",
-        color: "#ffffff",
+        background: "#0B0C10",
+        color: "#D6D8DA",
         padding: "10px",
         border: "none",
         cursor: "pointer",
         fontSize: "2vh",
-        fontWeight: "bold"
+        fontWeight: "bold",
+        border: "2px solid #52575C"
     },
     wordList: {
         display: "flex",
@@ -266,8 +285,8 @@ const styles = {
         alignItems: "center",
         fontSize: "2vh"
     },
-    inputtext :{
-        color : "green"
+    inputtext: {
+        color: "#34C759"
 
     }
 };
