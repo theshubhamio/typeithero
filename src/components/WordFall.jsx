@@ -178,6 +178,7 @@ function WordFall() {
             <input
                 ref={iRef}
                 type="text"
+                contentEditable="true"
                 style={{ opacity: 0, position: 'absolute', zIndex: -1 }}
             />
             <div style={styles.header}>
@@ -238,7 +239,7 @@ const styles = {
         flexDirection: "column",
         background: "#1C1E22",
         height: "15vh",
-        width: "75vh",
+        width: "75vw",
         justifyContent: "center",
         fontSize: "2vh"
     },
@@ -247,7 +248,7 @@ const styles = {
         flexDirection: "column",
         background: "#1C1E22",
         height: "15vh",
-        width: "75vh",
+        width: "75vw",
         justifyContent: "center",
         alignItems: "center",
         border: "2px solid #1C1E22"
@@ -255,7 +256,7 @@ const styles = {
     footer: {
         background: "#1C1E22",
         height: "15vh",
-        width: "75vh",
+        width: "75vw",
         position: "absolute",
         bottom: 0,
         display: "flex",
